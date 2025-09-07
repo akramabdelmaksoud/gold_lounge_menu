@@ -1,0 +1,19 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+html, body, #__next { height: 100%; }
+body { @apply bg-neutral-950 text-neutral-100; }
+
+
+/* Luxury gold accents */
+.gold-gradient { background-image: linear-gradient(135deg, #E6B400 0%, #FFC933 40%, #FFE699 100%); }
+.gold-text {
+background: linear-gradient(135deg, #FFE699 0%, #FFC933 40%, #E6B400 60%, #CC9F00 100%);
+-webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.card-glass { @apply bg-neutral-900/60 backdrop-blur rounded-3xl shadow-gold border border-neutral-800; }
+.section-hero { @apply relative overflow-hidden rounded-3xl border border-neutral-800 shadow-gold; }
+.section-hero::after { content: ""; position: absolute; inset: 0; background: radial-gradient(60% 40% at 70% 0%, rgba(230,180,0,0.25), transparent 70%), linear-gradient(180deg, rgba(0,0,0,0.55), rgba(0,0,0,0.7)); }
