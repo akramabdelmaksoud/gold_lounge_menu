@@ -512,19 +512,20 @@ const ITEMS = [
   { id:123, section: "extras", icon: Milk, price: 0, name: { en: "Caramel Sauce", ar: "صوص كراميل" }, desc: { en: "Drizzle", ar: "للزينة" }},
   { id:124, section: "extras", icon: Milk, price: 0, name: { en: "Ice Cream Scoop", ar: "آيس كريم" }, desc: { en: "Add a scoop", ar: "إضافة سكوب" }},
 ];
-
 /* ---------------------------- COMPONENT ------------------------------- */
 export default function CafeMenu() {
   const [lang, setLang] = useState("en");
   const [dark, setDark] = useState(false);
   const T = STR[lang];
 
+  // group items by section
   const grouped = useMemo(() => {
     const map = Object.fromEntries(SECTIONS.map(s => [s.id, []]));
     ITEMS.forEach((it) => map[it.section]?.push(it));
     return map;
   }, []);
 
+  // section refs + active tab
   const sectionRefs = useRef(Object.fromEntries(SECTIONS.map(s => [s.id, null])));
   const [active, setActive] = useState(SECTIONS[0].id);
 
@@ -534,139 +535,173 @@ export default function CafeMenu() {
         const visible = entries
           .filter(e => e.isIntersecting)
           .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-        if (visible[0]) setActive(visible[0].target.getAttribute("data-id") || SECTIONS[0].id);
+        if (visible[0]) {
+          const id = visible[0].target.getAttribute("data-id") || SECTIONS[0].id;
+          setActive(id);
+        }
       },
-      { root: null, rootMargin: "-120px 0px -60% 0px", threshold: [0, 0.3, 0.6] }
+      // smaller sticky offset on phones
+      { root: null, rootMargin: "-84px 0px -60% 0px", threshold: [0, 0.3, 0.6] }
     );
     Object.values(sectionRefs.current).forEach((n) => n && observer.observe(n));
     return () => observer.disconnect();
   }, [lang]);
 
-  const scrollTo = (id) => sectionRefs.current[id]?.scrollIntoView({ behavior: "smooth", block: "start" });
+  const scrollTo = (id) =>
+    sectionRefs.current[id]?.scrollIntoView({ behavior: "smooth", block: "start" });
 
   const Section = ({ id, children }) => (
     <section
       ref={(el) => (sectionRefs.current[id] = el)}
       data-id={id}
-      className="scroll-mt-28"
+      className="scroll-mt-24 md:scroll-mt-[7.5rem]"
     >
       {children}
     </section>
   );
 
   return (
-    <div dir={lang === "ar" ? "rtl" : "ltr"} className={`${dark ? "bg-neutral-950 text-neutral-100" : "bg-neutral-50 text-neutral-900"} min-h-screen`}>
-      {/* HEADER */}
-<header className="sticky top-0 z-40 bg-neutral-900/90 backdrop-blur border-b border-yellow-500/30 px-4 py-3">
-  <div className="max-w-6xl mx-auto flex flex-wrap items-center gap-3">
-    {/* logo + brand */}
-    <div className="flex items-center gap-3">
-      <img
-        src="/logo.jpg"           // put your file at public/logo.png
-        alt="Gold Lounge"
-        className="h-16 w-16 rounded-full object-cover bg-white ring-2 ring-yellow-500"
-      />
-      <div>
-        <h1 className="text-2xl font-extrabold tracking-tight text-yellow-400">
-          {lang === "en" ? "Gold Lounge" : "جولد لاونج"}
-        </h1>
-        <p className="text-xs text-neutral-300">{T.subtitle}</p>
-      </div>
-    </div>
-
-    <div className="flex-1" />
-
-    {/* controls */}
-    <div className="flex items-center gap-2">
-      <Button
-        variant="ghost"
-        className="text-yellow-300 hover:text-yellow-200"
-        onClick={() => setDark(v => !v)}
-        aria-label="Toggle theme"
-      >
-        {dark ? <Sun size={18}/> : <Moon size={18}/>} {T.theme}
-      </Button>
-      <Button
-        variant="ghost"
-        className="text-yellow-300 hover:text-yellow-200"
-        onClick={() => setLang(l => (l === "en" ? "ar" : "en"))}
-        aria-label="Toggle language"
-      >
-        <Languages size={18}/> {T.lang}
-      </Button>
-    </div>
-  </div>
-
-  {/* TABS */}
-  <div className="max-w-6xl mx-auto mt-3 overflow-x-auto">
-    <div className="flex gap-2 pb-2">
-      {SECTIONS.map((s) => {
-        const isActive = active === s.id;
-        return (
-          <Button
-            key={s.id}
-            variant="ghost"
-            onClick={() => scrollTo(s.id)}
-            className={[
-              "whitespace-nowrap border",
-              isActive
-                ? "bg-yellow-500 text-black border-yellow-500"
-                : "bg-transparent text-yellow-300 border-yellow-700 hover:bg-yellow-600/10"
-            ].join(" ")}
-          >
-            <s.icon
-              size={16}
-              className={`mr-2 ${isActive ? "text-black" : "text-yellow-400"}`}
+    <div
+      dir={lang === "ar" ? "rtl" : "ltr"}
+      className={`${dark ? "bg-neutral-950 text-neutral-100" : "bg-neutral-50 text-neutral-900"} min-h-screen`}
+    >
+      {/* ====================== HEADER (mobile compact) ====================== */}
+      <header className="sticky top-0 z-40 bg-neutral-900/90 backdrop-blur border-b border-yellow-500/30 px-3 md:px-4 py-2 md:py-3">
+        <div className="max-w-6xl mx-auto flex items-center gap-2 md:gap-3">
+          {/* logo + brand */}
+          <div className="flex items-center gap-2 md:gap-3 min-w-0">
+            <img
+              src="/logo.jpg" // put your file in /public/logo.jpg
+              alt="Gold Lounge"
+              className="h-10 w-10 md:h-16 md:w-16 rounded-full object-cover bg-white ring-2 ring-yellow-500"
             />
-            {T.sections[s.id]}
-          </Button>
-        );
-      })}
-    </div>
-  </div>
+            <div className="truncate">
+              <h1 className="text-lg md:text-2xl font-extrabold tracking-tight text-yellow-400 leading-tight truncate">
+                {lang === "en" ? "Gold Lounge" : "جولد لاونج"}
+              </h1>
+              <p className="hidden sm:block text-[11px] md:text-xs text-neutral-300 truncate">
+                {T.subtitle}
+              </p>
+            </div>
+          </div>
 
-  <div className="max-w-6xl mx-auto text-[10px] text-neutral-300 mt-1">
-    {T.waiterNote}
-  </div>
-</header>
+          <div className="flex-1" />
 
+          {/* controls: icons on mobile, with labels on md+ */}
+          <div className="flex items-center gap-1 md:gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 md:h-9 md:w-9 text-yellow-300 hover:text-yellow-200"
+              onClick={() => setDark(v => !v)}
+              aria-label={T.theme}
+              title={T.theme}
+            >
+              {dark ? <Sun size={18}/> : <Moon size={18}/>}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 md:h-9 md:w-9 text-yellow-300 hover:text-yellow-200"
+              onClick={() => setLang(l => (l === "en" ? "ar" : "en"))}
+              aria-label={T.lang}
+              title={T.lang}
+            >
+              <Languages size={18}/>
+            </Button>
+            {/* show text labels on md+ only */}
+            <span className="hidden md:inline text-yellow-300 text-xs">{T.theme}</span>
+            <span className="hidden md:inline text-yellow-300 text-xs">{T.lang}</span>
+          </div>
+        </div>
 
-      {/* CONTENT */}
-      <main className="max-w-6xl mx-auto px-4 py-6">
+        {/* TABS: compact pills, horizontal scroll, hidden scrollbar on mobile */}
+        <div className="max-w-6xl mx-auto mt-2 overflow-x-auto scrollbar-none">
+          <div className="flex gap-2 pb-1">
+            {SECTIONS.map((s) => {
+              const isActive = active === s.id;
+              return (
+                <Button
+                  key={s.id}
+                  variant="ghost"
+                  onClick={() => scrollTo(s.id)}
+                  className={[
+                    "px-3 py-1 h-8 text-xs rounded-full whitespace-nowrap border",
+                    isActive
+                      ? "bg-yellow-500 text-black border-yellow-500"
+                      : "bg-transparent text-yellow-300 border-yellow-700 hover:bg-yellow-600/10"
+                  ].join(" ")}
+                >
+                  <s.icon
+                    size={14}
+                    className={`mr-1 ${isActive ? "text-black" : "text-yellow-400"}`}
+                  />
+                  <span>{T.sections[s.id]}</span>
+                </Button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="max-w-6xl mx-auto text-[10px] text-neutral-300 mt-1">
+          {T.waiterNote}
+        </div>
+      </header>
+
+      {/* =========================== CONTENT =========================== */}
+      <main className="max-w-6xl mx-auto px-3 md:px-4 py-4 md:py-6">
         {SECTIONS.map((s) => (
           <Section key={s.id} id={s.id}>
-     {/* HERO */}
-<div
-  className="relative overflow-hidden rounded-3xl border border-black/5 dark:border-neutral-800 mb-5 h-48 md:h-64 bg-black"
-  style={{
-    backgroundImage: `url(${s.hero})`,
-    backgroundSize: "cover",
-    backgroundPosition: "center 30%",
-    backgroundRepeat: "no-repeat"
-  }}
->
-  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-  <div className="absolute bottom-4 left-4 right-4 flex items-center gap-2">
-    <s.icon className="text-yellow-400" />
-    <h2 className="text-3xl md:text-4xl font-extrabold text-white drop-shadow">
-      {T.sections[s.id]}
-    </h2>
-  </div>
-</div>
+            {/* HERO: shorter on phones; adjust vertical focus with backgroundPosition */}
+            <div
+              className="relative overflow-hidden rounded-3xl border border-black/5 dark:border-neutral-800 mb-3 md:mb-5 h-32 sm:h-40 md:h-64"
+              style={{
+                backgroundImage: `url(${s.hero})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center 30%",
+                backgroundRepeat: "no-repeat"
+              }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+              <div className="absolute bottom-2 md:bottom-4 left-3 right-3 flex items-center gap-2">
+                <s.icon className="text-yellow-400" />
+                <h2 className="text-xl sm:text-2xl md:text-4xl font-extrabold text-white drop-shadow">
+                  {T.sections[s.id]}
+                </h2>
+              </div>
+            </div>
 
-
-            {/* GRID */}
-            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {/* GRID: force 3 columns on mobile (your request), scale spacing by breakpoint */}
+            <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4">
               {grouped[s.id].map((item) => (
-                <motion.div key={item.id} whileHover={{ scale: 1.02 }} transition={{ type: "spring", stiffness: 250 }}>
-                  <Card className="hover:shadow-lg">
-                    <CardContent className="flex flex-col items-center text-center">
-                      <div className="mb-3 p-3 rounded-full bg-yellow-500/10 border border-yellow-600/30">
-                        <item.icon size={28} className="text-yellow-600" />
+                <motion.div
+                  key={item.id}
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ type: "spring", stiffness: 250 }}
+                >
+                  <Card className="hover:shadow-md">
+                    <CardContent className="p-2 sm:p-3 md:p-4 text-center">
+                      {/* icon bubble (compact on phones) */}
+                      <div className="mx-auto mb-2 p-2 rounded-full bg-yellow-500/10 border border-yellow-600/30 w-9 h-9 flex items-center justify-center">
+                        <item.icon size={18} className="text-yellow-600" />
                       </div>
-                      <h3 className="text-xl font-semibold">{item.name[lang]}</h3>
-                      {item.desc && <p className="opacity-70 mt-2">{item.desc[lang]}</p>}
-                      <div className="mt-3 text-lg font-bold">{STR[lang].price(item.price || 0)}</div>
+
+                      {/* name: trimmed on phones to keep height small */}
+                      <h3 className="text-[12px] sm:text-sm md:text-base font-semibold leading-tight line-clamp-2 min-h-[32px]">
+                        {item.name[lang]}
+                      </h3>
+
+                      {/* description: hide on small screens, show from md+ */}
+                      {item.desc && (
+                        <p className="hidden md:block text-sm opacity-70 mt-1 line-clamp-2">
+                          {item.desc[lang]}
+                        </p>
+                      )}
+
+                      {/* price: compact on phones */}
+                      <div className="mt-1 md:mt-2 text-[12px] sm:text-sm md:text-lg font-bold">
+                        {STR[lang].price(item.price || 0)}
+                      </div>
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -675,14 +710,15 @@ export default function CafeMenu() {
           </Section>
         ))}
 
-        <div className="mt-12 text-center">
-          <Button className="gap-2">
+        {/* Explore: hide on tiny screens to save space */}
+        <div className="mt-8 md:mt-12 text-center">
+          <Button className="gap-2 hidden sm:inline-flex">
             {T.explore}
           </Button>
         </div>
       </main>
 
-      {/* FOOTER */}
+      {/* =========================== FOOTER =========================== */}
       <footer className="max-w-6xl mx-auto px-4 pb-10 text-center opacity-70">
         <p>
           &copy; 2025 Pixel Digital Marketing Agency. All rights reserved.
@@ -695,3 +731,7 @@ export default function CafeMenu() {
     </div>
   );
 }
+
+  );
+}
+
